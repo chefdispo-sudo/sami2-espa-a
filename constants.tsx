@@ -4,9 +4,9 @@ import { Language } from "./types";
 
 export const COURSE_BUILDER_PROMPT = (data: any) => {
   const langMap: Record<Language, string> = {
+    fr: "FRANÇAIS",
     es: "ESPAÑOL DE ESPAÑA",
-    en: "ENGLISH (UK/US)",
-    fr: "FRANÇAIS"
+    en: "ENGLISH (UK/US)"
   };
 
   return `
@@ -19,147 +19,23 @@ REGLAS DE ELABORACIÓN Y MULTIMEDIA:
 3. Búsqueda de Video (CRÍTICO): Para CADA lección, utiliza la herramienta googleSearch para encontrar un vídeo educativo en YouTube que sea público y permita su reproducción. 
    - Prioriza canales como TED-Ed, Khan Academy, CrashCourse o similares.
    - Debes proporcionar una URL de YouTube válida y funcional en el campo videoUrl.
-   - Asegúrate de que el video sea exactamente sobre el tema tratado en la lección.
 4. Rigor Académico: Usa terminología técnica adecuada al nivel pero explicada con claridad.
 
-IMPORTANTE: El idioma de todo el contenido debe ser ${langMap[data.language as Language] || "ESPAÑOL"}.
-
-Debes incluir:
-1. Título y descripción de alto impacto.
-2. Objetivos de aprendizaje ambiciosos.
-3. 4 a 6 Unidades con 2 a 3 lecciones cada una.
-4. En cada lección: Idea Clave extensa, Ejemplo de caso real complejo, Actividad de aplicación práctica, Video ilustrativo de YouTube (URL real) y Test.
-5. Evaluación final desafiante.
+IMPORTANTE: El idioma de todo el contenido debe ser ${langMap[data.language as Language] || "FRANÇAIS"}.
 `;
 };
 
 export const TRANSLATIONS: Record<Language, any> = {
-  es: {
-    brand: "Profesor",
-    slogan: "Tu Aula Virtual con IA",
-    subtitle: "Diseña cursos personalizados al instante. Aprende lo que quieras, cuando quieras, con tutoría inteligente.",
-    createCourse: "Crear Curso Ahora",
-    designing: "Diseñando tu Aula Virtual...",
-    syncing: "Sincronizando...",
-    synced: "Sincronizado",
-    history: "Tus Cursos Guardados",
-    noHistory: "Aún no has creado ningún curso.",
-    language: "Idioma",
-    form: {
-      topic: "¿Qué quieres aprender?",
-      topicPlaceholder: "Ej. Física Cuántica para principiantes",
-      level: "Tu Nivel",
-      profile: "Tu Perfil",
-      profilePlaceholder: "Ej. Estudiante universitario",
-      objective: "Tu Objetivo Principal",
-      objectivePlaceholder: "Ej. Aprobar el examen de acceso",
-      time: "Tiempo Disponible",
-      timePlaceholder: "Ej. 2 horas al día",
-      format: "Formato de Contenido",
-      levels: ["Principiante", "Intermedio", "Avanzado"],
-      formats: ["Lecturas breves", "Lecturas + ejercicios", "Esquemas + problemas", "Mixto"]
-    },
-    classroom: {
-      plan: "Plan de Estudios",
-      progress: "Tu Progreso",
-      lessonsOf: "de lecciones",
-      unit: "Unidad",
-      lesson: "Lección",
-      prev: "Anterior",
-      next: "Siguiente Lección",
-      start: "Empezar curso ahora",
-      objectives: "Objetivos de Aprendizaje",
-      stats: { level: "Nivel", time: "Tiempo", units: "Unidades", lessons: "Lecciones" },
-      blocks: {
-        keyIdea: "Análisis Profundo",
-        example: "Caso de Uso Real",
-        activity: "Reto Práctico",
-        video: "Soporte Visual Ilustrativo",
-        videoExternal: "Ver en YouTube",
-        test: "Quick Check",
-        checkBtn: "Comprobar Conocimiento",
-        correct: "🎯 ¡Perfecto! Has dominado los conceptos de esta lección.",
-        wrong: "💡 Buen intento. Revisa las respuestas correctas antes de continuar.",
-        continue: "Completar y Seguir"
-      },
-      final: {
-        evaluation: "Evaluación Final",
-        evaluationDesc: "Demuestra todo lo que has aprendido en este viaje.",
-        submit: "Entregar Evaluación",
-        result: "Tu Resultado",
-        pass: "🏆 ¡Excelente! Has superado los objetivos del curso.",
-        fail: "📚 No te rindas. Un repaso te ayudará a consolidar estos temas.",
-        challenges: "Desafíos Finales",
-        challengesDesc: "Pon a prueba tu aprendizaje con estos proyectos prácticos.",
-        sources: "Fuentes y Referencias"
-      }
-    }
-  },
-  en: {
-    brand: "Teacher",
-    slogan: "Your AI Virtual Classroom",
-    subtitle: "Design personalized courses instantly. Learn whatever you want, whenever you want, with intelligent tutoring.",
-    createCourse: "Create Course Now",
-    designing: "Designing your Virtual Classroom...",
-    syncing: "Syncing...",
-    synced: "Synced",
-    history: "Your Saved Courses",
-    noHistory: "You haven't created any courses yet.",
-    language: "Language",
-    form: {
-      topic: "What do you want to learn?",
-      topicPlaceholder: "e.g. Quantum Physics for beginners",
-      level: "Your Level",
-      profile: "Your Profile",
-      profilePlaceholder: "e.g. University student",
-      objective: "Main Objective",
-      objectivePlaceholder: "e.g. Pass the entrance exam",
-      time: "Available Time",
-      timePlaceholder: "e.g. 2 hours per day",
-      format: "Content Format",
-      levels: ["Beginner", "Intermediate", "Advanced"],
-      formats: ["Short readings", "Readings + exercises", "Outlines + problems", "Mixed"]
-    },
-    classroom: {
-      plan: "Curriculum",
-      progress: "Your Progress",
-      lessonsOf: "of lessons",
-      unit: "Unit",
-      lesson: "Lesson",
-      prev: "Previous",
-      next: "Next Lesson",
-      start: "Start course now",
-      objectives: "Learning Objectives",
-      stats: { level: "Level", time: "Time", units: "Units", lessons: "Lessons" },
-      blocks: {
-        keyIdea: "In-depth Analysis",
-        example: "Real World Case",
-        activity: "Practical Challenge",
-        video: "Illustrative Visual Support",
-        videoExternal: "Watch on YouTube",
-        test: "Quick Check",
-        checkBtn: "Check Knowledge",
-        correct: "🎯 Perfect! You have mastered the concepts of this lesson.",
-        wrong: "💡 Good try. Review the correct answers before continuing.",
-        continue: "Complete and Continue"
-      },
-      final: {
-        evaluation: "Final Evaluation",
-        evaluationDesc: "Show everything you've learned on this journey.",
-        submit: "Submit Evaluation",
-        result: "Your Result",
-        pass: "🏆 Excellent! You have exceeded the course objectives.",
-        fail: "📚 Don't give up. A review will help you consolidate these topics.",
-        challenges: "Final Challenges",
-        challengesDesc: "Test your learning with these practical projects.",
-        sources: "Sources & References"
-      }
-    }
-  },
   fr: {
     brand: "Professeur",
+    nav: {
+      home: "Accueil",
+      classroom: "Aula Sami",
+      about: "À Propos",
+      blog: "Blog"
+    },
     slogan: "Votre Salle de Classe IA",
-    subtitle: "Concevez des cours personnalisés instantanément. Apprenez ce que vous voulez, quand vous le souhaitez.",
+    subtitle: "Concevez des cours personnalisés instantanément. Apprenez ce que vous voulez, quand vous le souhaitez, avec un tutorat intelligent.",
     createCourse: "Créer le cours maintenant",
     designing: "Conception de votre classe...",
     syncing: "Synchronisation...",
@@ -167,14 +43,27 @@ export const TRANSLATIONS: Record<Language, any> = {
     history: "Vos cours enregistrés",
     noHistory: "Vous n'avez pas encore créé de cours.",
     language: "Langue",
+    about: {
+      title: "Notre Vision",
+      desc: "ProfesseurIA est né pour démocratiser l'éducation de haut niveau. Nous utilisons des modèles de langage de pointe pour créer des expériences d'apprentissage qui s'adaptent à vous, et non l'inverse.",
+      stats: ["+10k Cours Générés", "Apprentissage 24h/7", "Précision Académique"]
+    },
+    blog: {
+      title: "Actualités Éducatives",
+      posts: [
+        { title: "L'avenir de l'IA dans les salles de classe", date: "15 Oct", desc: "Comment les enseignants utilisent les agents IA pour personnaliser l'étude." },
+        { title: "Deep Learning et Neurosciences", date: "10 Oct", desc: "Pourquoi l'apprentissage actif est plus efficace que la simple mémorisation." },
+        { title: "Guide d'étude efficace avec l'IA", date: "05 Oct", desc: "Techniques modernes pour maximiser votre temps avec ProfesseurIA." }
+      ]
+    },
     form: {
       topic: "Que voulez-vous apprendre ?",
-      topicPlaceholder: "Ex. Physique quantique pour débutants",
+      topicPlaceholder: "Ex. Physique Quantique pour débutants",
       level: "Votre Niveau",
       profile: "Votre Profil",
       profilePlaceholder: "Ex. Étudiant universitaire",
       objective: "Objectif Principal",
-      objectivePlaceholder: "Ex. Réussir l'examen d'entrée",
+      objectivePlaceholder: "Ex. Réussir un examen",
       time: "Temps Disponible",
       timePlaceholder: "Ex. 2 heures par jour",
       format: "Format du Contenu",
@@ -200,8 +89,8 @@ export const TRANSLATIONS: Record<Language, any> = {
         videoExternal: "Voir sur YouTube",
         test: "Vérification Rapide",
         checkBtn: "Vérifier les Connaissances",
-        correct: "🎯 Parfait ! Vous maîtrisez les concepts de esta leçon.",
-        wrong: "💡 Bon essai. Révisez les bonnes respuestas avant de continuer.",
+        correct: "🎯 Parfait ! Vous maîtrisez les concepts de cette leçon.",
+        wrong: "💡 Bon essai. Révisez les bonnes réponses avant de continuer.",
         continue: "Terminer et Continuer"
       },
       final: {
@@ -214,6 +103,160 @@ export const TRANSLATIONS: Record<Language, any> = {
         challenges: "Défis Finaux",
         challengesDesc: "Testez vos acquis avec ces projets pratiques.",
         sources: "Sources et Références"
+      }
+    }
+  },
+  es: {
+    brand: "Profesor",
+    nav: {
+      home: "Inicio",
+      classroom: "Aula Sami",
+      about: "A propos",
+      blog: "Blog"
+    },
+    slogan: "Tu Aula Virtual con IA",
+    subtitle: "Diseña cursos personalizados al instante. Aprende lo que quieras, cuando quieras.",
+    createCourse: "Crear Curso Ahora",
+    designing: "Diseñando tu Aula Virtual...",
+    syncing: "Sincronizando...",
+    synced: "Sincronizado",
+    history: "Tus Cursos Guardados",
+    noHistory: "Aún no has creado ningún curso.",
+    language: "Idioma",
+    about: {
+      title: "Nuestra Visión",
+      desc: "ProfesorIA nació para democratizar la educación de alto nivel.",
+      stats: ["+10k Cursos Generados", "Aprendizaje 24/7", "Precisión Académica"]
+    },
+    blog: {
+      title: "Actualidad Educativa",
+      posts: [
+        { title: "El futuro de la IA", date: "15 Oct", desc: "IA en las aulas." },
+        { title: "Neurociencia", date: "10 Oct", desc: "Aprendizaje activo." },
+        { title: "Guía eficiente", date: "05 Oct", desc: "Maximiza tu tiempo." }
+      ]
+    },
+    form: {
+      topic: "¿Qué quieres aprender?",
+      topicPlaceholder: "Ej. Física Cuántica",
+      level: "Tu Nivel",
+      profile: "Tu Perfil",
+      profilePlaceholder: "Ej. Estudiante",
+      objective: "Tu Objetivo",
+      objectivePlaceholder: "Ej. Aprobar examen",
+      time: "Tiempo",
+      timePlaceholder: "Ej. 2 horas",
+      format: "Formato",
+      levels: ["Principiante", "Intermedio", "Avanzado"],
+      formats: ["Lecturas breves", "Lecturas + ejercicios", "Esquemas", "Mixto"]
+    },
+    classroom: {
+      plan: "Plan de Estudios",
+      progress: "Tu Progreso",
+      lessonsOf: "de lecciones",
+      unit: "Unidad",
+      lesson: "Lección",
+      prev: "Anterior",
+      next: "Siguiente Lección",
+      start: "Empezar curso",
+      objectives: "Objetivos de Aprendizaje",
+      stats: { level: "Nivel", time: "Tiempo", units: "Unidades", lessons: "Lecciones" },
+      blocks: {
+        keyIdea: "Análisis Profundo",
+        example: "Caso de Uso Real",
+        activity: "Reto Práctico",
+        video: "Soporte Visual",
+        videoExternal: "Ver en YouTube",
+        test: "Quick Check",
+        checkBtn: "Comprobar",
+        correct: "🎯 ¡Perfecto!",
+        wrong: "💡 Buen intento.",
+        continue: "Continuar"
+      },
+      final: {
+        evaluation: "Evaluación Final",
+        evaluationDesc: "Demuestra lo aprendido.",
+        submit: "Entregar",
+        result: "Resultado",
+        pass: "🏆 ¡Excelente!",
+        fail: "📚 Repasa un poco.",
+        challenges: "Proyectos",
+        challengesDesc: "Proyectos prácticos.",
+        sources: "Fuentes"
+      }
+    }
+  },
+  en: {
+    brand: "Teacher",
+    nav: {
+      home: "Home",
+      classroom: "Sami Classroom",
+      about: "About Us",
+      blog: "Blog"
+    },
+    slogan: "Your AI Virtual Classroom",
+    subtitle: "Design personalized courses instantly. Learn what you want.",
+    createCourse: "Create Course Now",
+    about: {
+      title: "Our Vision",
+      desc: "TeacherAI democratizes education.",
+      stats: ["+10k Courses", "24/7 Learning", "Academic Precision"]
+    },
+    blog: {
+      title: "Educational News",
+      posts: [
+        { title: "AI Future", date: "Oct 15", desc: "AI agents in class." },
+        { title: "Neuroscience", date: "Oct 10", desc: "Active learning." },
+        { title: "Study Guide", date: "Oct 05", desc: "Maximize time." }
+      ]
+    },
+    form: {
+      topic: "Topic",
+      topicPlaceholder: "e.g. Quantum Physics",
+      level: "Level",
+      profile: "Profile",
+      profilePlaceholder: "e.g. Student",
+      objective: "Objective",
+      objectivePlaceholder: "e.g. Pass exam",
+      time: "Time",
+      timePlaceholder: "e.g. 2 hours",
+      format: "Format",
+      levels: ["Beginner", "Intermediate", "Advanced"],
+      formats: ["Short", "Exercises", "Outlines", "Mixed"]
+    },
+    classroom: {
+      plan: "Curriculum",
+      progress: "Progress",
+      lessonsOf: "of lessons",
+      unit: "Unit",
+      lesson: "Lesson",
+      prev: "Previous",
+      next: "Next",
+      start: "Start now",
+      objectives: "Objectives",
+      stats: { level: "Level", time: "Time", units: "Units", lessons: "Lessons" },
+      blocks: {
+        keyIdea: "In-depth Analysis",
+        example: "Real Case",
+        activity: "Challenge",
+        video: "Video Support",
+        videoExternal: "YouTube",
+        test: "Check",
+        checkBtn: "Check",
+        correct: "🎯 Perfect!",
+        wrong: "💡 Try again.",
+        continue: "Continue"
+      },
+      final: {
+        evaluation: "Final Evaluation",
+        evaluationDesc: "Show knowledge.",
+        submit: "Submit",
+        result: "Result",
+        pass: "🏆 Excellent!",
+        fail: "📚 Review.",
+        challenges: "Challenges",
+        challengesDesc: "Projects.",
+        sources: "Sources"
       }
     }
   }
@@ -252,7 +295,7 @@ export const COURSE_SCHEMA = {
                     keyIdea: { type: Type.STRING },
                     appliedExample: { type: Type.STRING },
                     activity: { type: Type.STRING },
-                    videoUrl: { type: Type.STRING, description: "URL de un video educativo de YouTube que sea público." },
+                    videoUrl: { type: Type.STRING },
                     quickTest: {
                       type: Type.ARRAY,
                       items: {
