@@ -14,6 +14,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ course, activeLessonId, onSelectLesson, completedLessons, language }) => {
   const t = TRANSLATIONS[language].classroom;
+  const commonT = TRANSLATIONS[language];
 
   return (
     <aside className="w-[320px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto hidden lg:flex flex-col sticky top-0 transition-colors duration-300">
@@ -68,6 +69,10 @@ const Sidebar: React.FC<SidebarProps> = ({ course, activeLessonId, onSelectLesso
           ))}
           
           <div className="pt-8 border-t border-slate-100 dark:border-slate-800 space-y-2">
+             <button className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center gap-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 border border-rose-100 dark:border-rose-900/40 hover:scale-105">
+                <span className="text-base">🔴</span>
+                {commonT.nav.live}
+             </button>
              {[
                { id: 'assessment', label: t.final.evaluation, icon: '🎯' },
                { id: 'project', label: t.final.challenges, icon: '🏗️' },
@@ -90,14 +95,11 @@ const Sidebar: React.FC<SidebarProps> = ({ course, activeLessonId, onSelectLesso
         </div>
       </div>
 
-      {/* Sidebar Ad Unit */}
-      <div className="p-6 mt-auto bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800">
-        <AdSense 
-          adClient="ca-pub-XXXXXXXXXXXXXXXX" 
-          adSlot="YYYYYYYYYY" 
-          adFormat="rectangle" 
-          className="m-0"
-        />
+      <div className="p-6 mt-auto bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 text-center">
+        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Support Direct</p>
+        <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-full bg-rose-500 w-1/3 animate-pulse"></div>
+        </div>
       </div>
     </aside>
   );

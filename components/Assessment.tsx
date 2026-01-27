@@ -10,9 +10,10 @@ interface AssessmentProps {
   type: 'evaluation' | 'project' | 'sources';
   language: Language;
   onComplete?: (score: number) => void;
+  onExit?: () => void;
 }
 
-const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, type, language, onComplete }) => {
+const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, type, language, onComplete, onExit }) => {
   const t = TRANSLATIONS[language].classroom.final;
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showScore, setShowScore] = useState(false);
@@ -66,7 +67,7 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
           ))}
         </div>
 
-        <div className="mt-16 flex justify-center">
+        <div className="mt-16 flex flex-col items-center gap-6">
           {!showScore ? (
             <button
               onClick={handleFinish}
@@ -75,12 +76,22 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
               {t.submit}
             </button>
           ) : (
-            <div className="p-10 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-100 dark:border-indigo-900 rounded-[2.5rem] text-center w-full max-w-lg animate-in fade-in zoom-in">
-              <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-200 mb-2">{t.result}</h3>
-              <div className="text-6xl font-black text-indigo-600 dark:text-indigo-400 mb-6">{score} / {questions.length}</div>
-              <p className="text-indigo-700 dark:text-indigo-300 font-bold italic">
-                {score > questions.length / 2 ? t.pass : t.fail}
-              </p>
+            <div className="w-full space-y-8 animate-in fade-in zoom-in">
+              <div className="p-10 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-100 dark:border-indigo-900 rounded-[2.5rem] text-center w-full max-w-lg mx-auto">
+                <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-200 mb-2">{t.result}</h3>
+                <div className="text-6xl font-black text-indigo-600 dark:text-indigo-400 mb-6">{score} / {questions.length}</div>
+                <p className="text-indigo-700 dark:text-indigo-300 font-bold italic">
+                  {score > questions.length / 2 ? t.pass : t.fail}
+                </p>
+              </div>
+              {onExit && (
+                <button
+                  onClick={onExit}
+                  className="px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl mx-auto block hover:scale-105 transition-transform"
+                >
+                  {t.exitBtn}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -108,6 +119,14 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
               </div>
             ))}
           </div>
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="mt-12 px-10 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest"
+            >
+              {t.exitBtn}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -142,6 +161,14 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
             </a>
           ))}
         </div>
+        {onExit && (
+          <button
+            onClick={onExit}
+            className="mt-12 px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest block mx-auto"
+          >
+            {t.exitBtn}
+          </button>
+        )}
       </div>
     );
   }

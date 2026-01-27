@@ -5,39 +5,44 @@ import Sidebar from './components/Sidebar';
 import LessonContent from './components/LessonContent';
 import Assessment from './components/Assessment';
 import UserRegistrationForm from './components/UserRegistrationForm';
-import AdSense from './components/AdSense';
 import { generateCourse } from './geminiService';
 import { Course, CourseFormData, Language, UserData } from './types';
 import { TRANSLATIONS } from './constants';
 import { supabase } from './supabaseClient';
 import { generateCoursePDF } from './pdfService';
 
-const GOOGLE_SHEET_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwmgSYVCTEJ_DJF7q9D6bySEMQ05zHhYMRLu4v4zu8KDGHY2Ieuy_vVL5qkKCWH0h1n/exec';
-
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'classroom' | 'about' | 'blog'>('home');
   const [user, setUser] = useState<UserData | null>(() => {
-    const saved = localStorage.getItem('profesoria_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('profesoria_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
   });
 
+  const [view, setView] = useState<'home' | 'classroom' | 'live' | 'about' | 'blog'>('home');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<Course | null>(() => {
+    try {
+      const saved = localStorage.getItem('profesoria_current_course');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
+  });
+
   const [activeUnitId, setActiveUnitId] = useState<string>('');
   const [activeLessonId, setActiveLessonId] = useState<string>('');
   const [completedLessons, setCompletedLessons] = useState<string[]>(() => {
-    const saved = localStorage.getItem('profesoria_completed');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('profesoria_completed');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
   });
+
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('profesoria_lang');
-    // Prioridad por defecto: Francés
-    return (saved as Language) || 'fr';
+    return (localStorage.getItem('profesoria_lang') as Language) || 'fr';
   });
   const [courseHistory, setCourseHistory] = useState<Course[]>([]);
+  const [liveLink, setLiveLink] = useState<string>(localStorage.getItem('profesoria_live_link') || 'https://meet.google.com/new');
 
   const t = TRANSLATIONS[language];
 
@@ -53,67 +58,59 @@ const App: React.FC = () => {
         try {
           const c = JSON.parse(localStorage.getItem(key)!);
           if (c) history.push(c);
-        } catch(e) {}
+        } catch (e) {}
       }
     }
     setCourseHistory(history.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
     
     if (isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
-  }, [isDarkMode]);
+  }, [isDarkMode, course]);
 
-  const sendToGoogleSheet = async (type: string, details: any, specificUser?: UserData) => {
-    const currentUser = specificUser || user;
-    if (!currentUser) return;
-    setIsSyncing(true);
-    const params = new URLSearchParams();
-    params.append('timestamp', new Date().toLocaleString());
-    params.append('userName', currentUser.name);
-    params.append('userEmail', currentUser.email);
-    params.append('interactionType', type);
-    params.append('courseTitle', course?.title || 'Home');
-    params.append('details', JSON.stringify(details));
-    try {
-      await fetch(GOOGLE_SHEET_WEBHOOK, { method: 'POST', mode: 'no-cors', body: params.toString() });
-      setTimeout(() => setIsSyncing(false), 1000);
-    } catch (e) { setIsSyncing(false); }
+  const handleRegister = (userData: UserData) => {
+    setUser(userData);
+    localStorage.setItem('profesoria_user', JSON.stringify(userData));
+    supabase.from('users').insert([{ name: userData.name, email: userData.email }]).then(() => {});
   };
 
-  const handleDownloadPDF = async () => {
-    if (!course) return;
-    setIsExporting(true);
-    try {
-      await generateCoursePDF(course, language);
-      sendToGoogleSheet('DESCARGA_PDF', { courseTitle: course.title });
-    } finally { setIsExporting(false); }
+  const handleLogout = () => {
+    if (window.confirm(t.logoutConfirm)) {
+      localStorage.removeItem('profesoria_user');
+      setUser(null);
+      setView('home');
+    }
   };
 
-  const handleRegister = async (userData: UserData) => {
-    setIsLoading(true);
-    try {
-      await supabase.from('users').insert([{ name: userData.name, email: userData.email }]);
-      localStorage.setItem('profesoria_user', JSON.stringify(userData));
-      setUser(userData);
-      sendToGoogleSheet('REGISTRO', { message: "Nuevo alumno" }, userData);
-    } finally { setIsLoading(false); }
+  const handleExitCourse = () => {
+    localStorage.setItem('profesoria_current_course', JSON.stringify(course));
+    setView('home');
   };
 
   const handleCreateCourse = async (formData: CourseFormData) => {
     setIsLoading(true);
     try {
       const generated = await generateCourse({ ...formData, language });
-      const newCourse: Course = { ...generated, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() };
+      const newCourse: Course = { 
+        ...generated, 
+        id: Math.random().toString(36).substr(2, 9), 
+        createdAt: Date.now() 
+      };
       localStorage.setItem(`profesoria_course_${newCourse.id}`, JSON.stringify(newCourse));
+      localStorage.setItem('profesoria_current_course', JSON.stringify(newCourse));
       setCourse(newCourse);
       setActiveUnitId(newCourse.units[0].id);
       setActiveLessonId(newCourse.units[0].lessons[0].id);
       setView('classroom');
-      sendToGoogleSheet('CURSO_CREADO', { courseTitle: newCourse.title });
-    } finally { setIsLoading(false); }
+    } catch (err) {
+      alert(language === 'fr' ? "Erreur de génération. Vérifiez votre connexion." : "Error generating course.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loadCourseFromHistory = (c: Course) => {
     setCourse(c);
+    localStorage.setItem('profesoria_current_course', JSON.stringify(c));
     setActiveUnitId(c.units[0].id);
     setActiveLessonId(c.units[0].lessons[0].id);
     setView('classroom');
@@ -124,7 +121,6 @@ const App: React.FC = () => {
     const updated = [...completedLessons, activeLessonId];
     setCompletedLessons(updated);
     localStorage.setItem('profesoria_completed', JSON.stringify(updated));
-    sendToGoogleSheet('LECCION_COMPLETA', { lessonId: activeLessonId });
   };
 
   const navigateTo = (direction: 'next' | 'prev') => {
@@ -138,17 +134,18 @@ const App: React.FC = () => {
     } else if (direction === 'prev' && idx > 0) {
       setActiveUnitId(all[idx - 1].uId); setActiveLessonId(all[idx - 1].lId);
     }
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
   };
 
-  if (!user) return <UserRegistrationForm courseTitle="ProfesseurIA" onRegister={handleRegister} language={language} />;
+  if (!user) {
+    return <UserRegistrationForm courseTitle="ProfesseurIA" onRegister={handleRegister} language={language} />;
+  }
 
   const currentUnit = course?.units.find(u => u.id === activeUnitId);
   const currentLesson = currentUnit?.lessons.find(l => l.id === activeLessonId);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors duration-500">
-      {/* Navbar con pestañas */}
       <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 py-3 px-6 md:px-10 flex justify-between items-center sticky top-0 z-[60]">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('home')}>
@@ -159,35 +156,20 @@ const App: React.FC = () => {
               {t.brand}<span className="text-indigo-600">IA</span>
             </h1>
           </div>
-
           <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
-            <button onClick={() => setView('home')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'home' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.home}</button>
-            {course && <button onClick={() => setView('classroom')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'classroom' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.classroom}</button>}
-            <button onClick={() => setView('about')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'about' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.about}</button>
-            <button onClick={() => setView('blog')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'blog' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.blog}</button>
+            <button onClick={() => setView('home')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'home' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.home}</button>
+            <button onClick={() => setView('live')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'live' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.live}</button>
+            {course && <button onClick={() => setView('classroom')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'classroom' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.classroom}</button>}
           </nav>
         </div>
-        
         <div className="flex items-center gap-3">
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mr-2">
+          <button onClick={handleLogout} className="text-[10px] font-black uppercase text-slate-400 hover:text-rose-500 px-3 py-2 transition-colors hidden sm:block">{t.nav.logout}</button>
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             {(['fr', 'en', 'es'] as Language[]).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLanguage(l)}
-                className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${language === l ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400'}`}
-              >
-                {l}
-              </button>
+              <button key={l} onClick={() => setLanguage(l)} className={`w-7 h-7 rounded-lg text-[9px] font-black uppercase transition-all ${language === l ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400'}`}>{l}</button>
             ))}
           </div>
-          {view === 'classroom' && (
-            <button onClick={handleDownloadPDF} className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-lg hover:bg-emerald-700 transition-all">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            </button>
-          )}
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
-            {isDarkMode ? '🌙' : '☀️'}
-          </button>
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">{isDarkMode ? '🌙' : '☀️'}</button>
         </div>
       </header>
 
@@ -198,7 +180,7 @@ const App: React.FC = () => {
             <main className="flex-1 overflow-y-auto p-6 md:p-16 bg-white dark:bg-slate-950">
               <div className="max-w-4xl mx-auto">
                 {activeUnitId === 'final' ? (
-                  <Assessment type={activeLessonId as any} questions={course.finalAssessment} projects={course.finalProjects} sources={course.sources} language={language} />
+                  <Assessment type={activeLessonId as any} questions={course.finalAssessment} projects={course.finalProjects} sources={course.sources} language={language} onExit={handleExitCourse} />
                 ) : currentLesson ? (
                   <div className="space-y-12">
                     <div className="space-y-4">
@@ -215,74 +197,79 @@ const App: React.FC = () => {
               </div>
             </main>
           </>
+        ) : view === 'live' ? (
+          <main className="flex-1 overflow-y-auto p-6 md:p-20 flex items-center justify-center">
+             <div className="max-w-2xl w-full bg-white dark:bg-slate-900 rounded-[3rem] p-12 text-center shadow-3xl border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-rose-100 dark:bg-rose-900/30 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-xl shadow-rose-200/50 dark:shadow-none animate-pulse">
+                   <svg className="w-12 h-12 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 className="text-4xl font-black mb-4 text-slate-800 dark:text-white">{t.live.title}</h2>
+                <p className="text-lg text-slate-500 font-medium mb-12">{t.live.subtitle}</p>
+                <div className="space-y-6">
+                  <a href={liveLink} target="_blank" rel="noopener noreferrer" className="block w-full py-6 bg-rose-600 text-white font-black text-xl rounded-2xl shadow-xl hover:bg-rose-700 hover:scale-[1.02] transition-all">{t.live.joinBtn}</a>
+                  <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{t.live.setup}</label>
+                    <input type="text" value={liveLink} onChange={(e) => { setLiveLink(e.target.value); localStorage.setItem('profesoria_live_link', e.target.value); }} className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-indigo-600 outline-none text-xs text-slate-400 font-mono text-center" />
+                  </div>
+                </div>
+             </div>
+          </main>
+        ) : view === 'about' ? (
+          <main className="flex-1 overflow-y-auto p-6 md:p-20">
+            <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in">
+              <h2 className="text-5xl font-black text-indigo-600">{t.about.title}</h2>
+              <p className="text-xl text-slate-600 dark:text-slate-300 font-medium leading-relaxed">{t.about.desc}</p>
+              <div className="grid md:grid-cols-3 gap-6">
+                {t.about.stats.map((s: string, i: number) => (
+                  <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl border border-slate-100 dark:border-slate-800 font-black text-xl">{s}</div>
+                ))}
+              </div>
+            </div>
+          </main>
+        ) : view === 'blog' ? (
+          <main className="flex-1 overflow-y-auto p-6 md:p-20">
+            <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in">
+              <h2 className="text-5xl font-black text-slate-900 dark:text-white">{t.blog.title}</h2>
+              <div className="grid md:grid-cols-2 gap-8">
+                {t.blog.posts.map((post: any, i: number) => (
+                  <article key={i} className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-2xl transition-all">
+                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{post.date}</span>
+                    <h3 className="text-2xl font-black mt-2 mb-4">{post.title}</h3>
+                    <p className="text-slate-500 font-medium">{post.desc}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </main>
         ) : (
           <main className="flex-1 overflow-y-auto p-6 md:p-20">
             <div className="max-w-6xl mx-auto">
-              {view === 'home' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="text-center mb-16 space-y-4">
-                    <h2 className="text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter">{t.slogan}</h2>
-                    <p className="text-xl text-slate-500 dark:text-slate-400 font-medium">Bonjour, <span className="text-indigo-600">{user.name}</span>. {t.subtitle}</p>
-                  </div>
-                  <CourseForm onSubmit={handleCreateCourse} isLoading={isLoading} language={language} />
-                  {courseHistory.length > 0 && (
-                    <div className="mt-20 space-y-8">
-                      <h3 className="text-2xl font-black text-slate-800 dark:text-white">{t.history}</h3>
-                      <div className="grid md:grid-cols-3 gap-6">
-                        {courseHistory.slice(0, 6).map(c => (
-                          <button key={c.id} onClick={() => loadCourseFromHistory(c)} className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 text-left hover:border-indigo-600 transition-all hover:shadow-xl">
-                            <h4 className="font-black text-slate-800 dark:text-white mb-2 line-clamp-1">{c.title}</h4>
-                            <p className="text-xs text-slate-400 line-clamp-2">{c.description}</p>
-                          </button>
-                        ))}
-                      </div>
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="text-center mb-16 space-y-4">
+                  <h2 className="text-6xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{t.slogan}</h2>
+                  <p className="text-xl text-slate-500 dark:text-slate-400 font-medium">Bonjour <span className="text-indigo-600 font-black">{user.name}</span>, prêt pour une nouvelle masterclass ?</p>
+                </div>
+                <CourseForm onSubmit={handleCreateCourse} isLoading={isLoading} language={language} />
+                {courseHistory.length > 0 && (
+                  <div className="mt-20 space-y-8">
+                    <h3 className="text-2xl font-black text-slate-800 dark:text-white">{t.history}</h3>
+                    <div className="grid md:grid-cols-3 gap-6 pb-20">
+                      {courseHistory.slice(0, 6).map(c => (
+                        <button key={c.id} onClick={() => loadCourseFromHistory(c)} className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 text-left hover:border-indigo-600 transition-all hover:shadow-xl group">
+                          <h4 className="font-black text-slate-800 dark:text-white mb-2 line-clamp-1 group-hover:text-indigo-600">{c.title}</h4>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{c.level}</p>
+                        </button>
+                      ))}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {view === 'about' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-16 py-10">
-                  <div className="text-center max-w-3xl mx-auto space-y-6">
-                    <h2 className="text-6xl font-black text-indigo-600">{t.about.title}</h2>
-                    <p className="text-xl text-slate-500 leading-relaxed font-medium">{t.about.desc}</p>
                   </div>
-                  <div className="grid md:grid-cols-3 gap-10">
-                    {t.about.stats.map((s: string, i: number) => (
-                      <div key={i} className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-xl border border-slate-100 text-center font-black text-2xl text-slate-800 dark:text-white">
-                        {s}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {view === 'blog' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 py-10">
-                  <h2 className="text-5xl font-black mb-16 text-center">{t.blog.title}</h2>
-                  <div className="grid md:grid-cols-3 gap-8">
-                    {t.blog.posts.map((post: any, i: number) => (
-                      <article key={i} className="group cursor-pointer bg-white dark:bg-slate-900 rounded-[3rem] overflow-hidden border border-slate-100 dark:border-slate-800 hover:shadow-2xl transition-all">
-                        <div className="h-48 bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center text-6xl">
-                          {['📚', '🧠', '🚀'][i]}
-                        </div>
-                        <div className="p-8 space-y-4">
-                          <span className="text-xs font-black text-indigo-600 uppercase tracking-widest">{post.date}</span>
-                          <h3 className="text-xl font-black group-hover:text-indigo-600 transition-colors">{post.title}</h3>
-                          <p className="text-sm text-slate-500 font-medium">{post.desc}</p>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </main>
         )}
       </div>
-      
       <footer className="py-6 px-10 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
-        <span>© 2024 ProfesseurIA Sami</span>
+        <span>© 2024 ProfesseurIA Sami — Éducation de Précision</span>
         <div className="flex gap-6">
           <button onClick={() => setView('about')}>{t.nav.about}</button>
           <button onClick={() => setView('blog')}>{t.nav.blog}</button>
