@@ -11,10 +11,12 @@ interface AssessmentProps {
   language: Language;
   onComplete?: (score: number) => void;
   onExit?: () => void;
+  onDownloadPDF?: () => void;
 }
 
-const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, type, language, onComplete, onExit }) => {
+const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, type, language, onComplete, onExit, onDownloadPDF }) => {
   const t = TRANSLATIONS[language].classroom.final;
+  const tClass = TRANSLATIONS[language].classroom;
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showScore, setShowScore] = useState(false);
 
@@ -83,6 +85,14 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
                 <p className="text-indigo-700 dark:text-indigo-300 font-bold italic">
                   {score > questions.length / 2 ? t.pass : t.fail}
                 </p>
+                {onDownloadPDF && (
+                  <button
+                    onClick={onDownloadPDF}
+                    className="mt-6 px-8 py-3 bg-white dark:bg-indigo-900 text-indigo-600 dark:text-indigo-100 rounded-xl font-black text-sm uppercase tracking-widest border border-indigo-200 dark:border-indigo-700 shadow-sm hover:scale-105 transition-transform"
+                  >
+                    📄 {tClass.downloadPDF}
+                  </button>
+                )}
               </div>
               {onExit && (
                 <button
@@ -119,14 +129,24 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
               </div>
             ))}
           </div>
-          {onExit && (
-            <button
-              onClick={onExit}
-              className="mt-12 px-10 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest"
-            >
-              {t.exitBtn}
-            </button>
-          )}
+          <div className="mt-12 flex flex-col md:flex-row gap-4 justify-center items-center">
+            {onDownloadPDF && (
+              <button
+                onClick={onDownloadPDF}
+                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
+              >
+                📄 {tClass.downloadPDF}
+              </button>
+            )}
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="px-10 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest"
+              >
+                {t.exitBtn}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -161,14 +181,24 @@ const Assessment: React.FC<AssessmentProps> = ({ questions, projects, sources, t
             </a>
           ))}
         </div>
-        {onExit && (
-          <button
-            onClick={onExit}
-            className="mt-12 px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest block mx-auto"
-          >
-            {t.exitBtn}
-          </button>
-        )}
+        <div className="mt-12 flex flex-col md:flex-row gap-4 justify-center items-center">
+          {onDownloadPDF && (
+            <button
+              onClick={onDownloadPDF}
+              className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
+            >
+              📄 {tClass.downloadPDF}
+            </button>
+          )}
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest block"
+            >
+              {t.exitBtn}
+            </button>
+          )}
+        </div>
       </div>
     );
   }

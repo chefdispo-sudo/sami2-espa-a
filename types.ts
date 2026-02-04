@@ -7,6 +7,11 @@ export interface UserData {
   sessionId: string;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
 export interface FilePart {
   data: string;
   mimeType: string;
@@ -26,7 +31,6 @@ export interface Lesson {
     keyIdea: string;
     appliedExample: string;
     activity: string;
-    videoUrl?: string;
     quickTest: Question[];
   };
 }

@@ -1,17 +1,14 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { COURSE_BUILDER_PROMPT, COURSE_SCHEMA } from "./constants";
-import { CourseFormData, Course, Source } from "./types";
+import { COURSE_BUILDER_PROMPT, COURSE_SCHEMA, CHATBOT_SYSTEM_INSTRUCTION } from "./constants";
+import { CourseFormData, Course, Source, ChatMessage, Language } from "./types";
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateCourse = async (formData: CourseFormData): Promise<Course> => {
-  // Correctly initialize GoogleGenAI using process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
   try {
-    // Prepare initial parts with the prompt
     const parts: any[] = [{ text: COURSE_BUILDER_PROMPT(formData) }];
 
-    // If there are attachments, add them as inlineData parts
     if (formData.attachments && formData.attachments.length > 0) {
       formData.attachments.forEach(file => {
         parts.push({
@@ -22,21 +19,18 @@ export const generateCourse = async (formData: CourseFormData): Promise<Course> 
         });
       });
       
-      // Add a directive to prioritize the attached files
       parts.push({
         text: "IMPORTANTE: Utiliza EXCLUSIVAMENTE o PRIORITARIAMENTE la información contenida en los archivos adjuntos para diseñar este curso. Si el archivo es un PDF o documento, analízalo a fondo y extrae los conceptos clave."
       });
     }
 
     const response = await ai.models.generateContent({
-      // Switched to gemini-3-flash-preview for significantly faster course generation (low latency)
       model: "gemini-3-flash-preview",
       contents: { parts },
       config: {
         responseMimeType: "application/json",
         responseSchema: COURSE_SCHEMA,
         tools: [{ googleSearch: {} }],
-        // Disabling thinking budget for immediate response since the structure is fixed by the schema
         thinkingConfig: { thinkingBudget: 0 }
       },
     });
@@ -46,7 +40,6 @@ export const generateCourse = async (formData: CourseFormData): Promise<Course> 
     
     const course = JSON.parse(text) as Course;
 
-    // Rule: Extract grounding metadata URLs when using Google Search and add them to the course sources
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (groundingChunks) {
       const searchSources: Source[] = groundingChunks
@@ -66,5 +59,41 @@ export const generateCourse = async (formData: CourseFormData): Promise<Course> 
   } catch (error) {
     console.error("Error generating course:", error);
     throw error;
+  }
+};
+
+export const streamChatResponse = async (
+  messages: ChatMessage[],
+  courseTitle: string,
+  lessonTitle: string,
+  userName: string,
+  language: Language,
+  onChunk: (chunk: string) => void
+) => {
+  try {
+    const contents = messages.map(m => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text }]
+    }));
+
+    const response = await ai.models.generateContentStream({
+      model: "gemini-3-flash-preview",
+      contents: contents,
+      config: {
+        systemInstruction: CHATBOT_SYSTEM_INSTRUCTION(courseTitle, lessonTitle, userName, language),
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+      }
+    });
+
+    for await (const chunk of response) {
+      if (chunk.text) {
+        onChunk(chunk.text);
+      }
+    }
+  } catch (error) {
+    console.error("Chat error:", error);
+    onChunk("Désolé, j'ai rencontré une erreur technique. Veuillez réessayer.");
   }
 };

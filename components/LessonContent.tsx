@@ -24,19 +24,6 @@ const LessonContent: React.FC<LessonContentProps> = ({ lesson, onComplete, isCom
     (q, idx) => testAnswers[idx] === q.correctAnswer
   );
 
-  // Robust YouTube URL Parser
-  const getEmbedUrl = (url?: string) => {
-    if (!url) return null;
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-    const match = url.match(youtubeRegex);
-    if (match && match[1]) {
-      return `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1`;
-    }
-    return null;
-  };
-
-  const embedUrl = getEmbedUrl(lesson.blocks.videoUrl);
-
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
       {/* Idea Clave */}
@@ -51,64 +38,6 @@ const LessonContent: React.FC<LessonContentProps> = ({ lesson, onComplete, isCom
           {lesson.blocks.keyIdea}
         </div>
       </section>
-
-      {/* Soporte Visual (Video) */}
-      {lesson.blocks.videoUrl && (
-        <section className="bg-slate-900 rounded-[2.5rem] p-6 md:p-8 shadow-2xl border border-slate-800 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:opacity-20 transition-opacity">
-            <svg className="w-32 h-32 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-rose-500 p-2.5 rounded-xl shadow-lg shadow-rose-500/20">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"></path></svg>
-              </div>
-              <h2 className="text-lg font-black text-white uppercase tracking-wider">{t.video}</h2>
-            </div>
-            
-            <a 
-              href={lesson.blocks.videoUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase rounded-lg transition-all backdrop-blur-md border border-white/10"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-              {t.videoExternal}
-            </a>
-          </div>
-          
-          <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-inner relative z-10 border border-white/5">
-            {embedUrl ? (
-              <iframe 
-                className="w-full h-full"
-                src={embedUrl}
-                title="Educational Video"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-12 text-center">
-                <div className="p-5 bg-white/5 rounded-full">
-                   <svg className="w-16 h-16 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                </div>
-                <p className="text-slate-400 font-bold max-w-sm mx-auto">
-                  Este recurso requiere ser abierto directamente en la plataforma de origen por motivos de privacidad.
-                </p>
-                <a 
-                  href={lesson.blocks.videoUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="px-8 py-4 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20"
-                >
-                  {t.videoExternal}
-                </a>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
 
       {/* Ejemplo Aplicado */}
       <section className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/20 dark:to-violet-950/20 rounded-[2rem] p-8 md:p-10 border border-indigo-100 dark:border-indigo-900/40">

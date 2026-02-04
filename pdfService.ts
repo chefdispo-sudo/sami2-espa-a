@@ -82,15 +82,6 @@ export const generateCoursePDF = async (course: Course, language: Language) => {
       doc.text(keyLines, margin, y);
       y += (keyLines.length * 5) + 5;
 
-      // Video Link if exists
-      if (lesson.blocks.videoUrl) {
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(225, 29, 72); // Rose-600
-        doc.text(`VIDEO: ${lesson.blocks.videoUrl}`, margin, y);
-        y += 7;
-        doc.setTextColor(0, 0, 0);
-      }
-
       // Ejemplo
       doc.setFont('helvetica', 'bold');
       doc.text(classroomT.blocks.example.toUpperCase(), margin, y);

@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import LessonContent from './components/LessonContent';
 import Assessment from './components/Assessment';
 import UserRegistrationForm from './components/UserRegistrationForm';
+import Chatbot from './components/Chatbot';
 import { generateCourse } from './geminiService';
 import { Course, CourseFormData, Language, UserData } from './types';
 import { TRANSLATIONS } from './constants';
@@ -86,6 +87,12 @@ const App: React.FC = () => {
     setView('home');
   };
 
+  const handleDownloadPDF = async () => {
+    if (course) {
+      await generateCoursePDF(course, language);
+    }
+  };
+
   const handleCreateCourse = async (formData: CourseFormData) => {
     setIsLoading(true);
     try {
@@ -145,7 +152,7 @@ const App: React.FC = () => {
   const currentLesson = currentUnit?.lessons.find(l => l.id === activeLessonId);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors duration-500 relative">
       <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 py-3 px-6 md:px-10 flex justify-between items-center sticky top-0 z-[60]">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('home')}>
@@ -159,7 +166,7 @@ const App: React.FC = () => {
           <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
             <button onClick={() => setView('home')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'home' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.home}</button>
             <button onClick={() => setView('live')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'live' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.live}</button>
-            {course && <button onClick={() => setView('classroom')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'classroom' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.classroom}</button>}
+            {course && <button onClick={() => setView('classroom')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'classroom' ? 'bg-white dark:bg-slate-900 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{t.nav.classroom}</button>}
           </nav>
         </div>
         <div className="flex items-center gap-3">
@@ -176,11 +183,26 @@ const App: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         {view === 'classroom' && course ? (
           <>
-            <Sidebar course={course} activeLessonId={activeLessonId} onSelectLesson={(u, l) => { setActiveUnitId(u); setActiveLessonId(l); }} completedLessons={completedLessons} language={language} />
+            <Sidebar 
+              course={course} 
+              activeLessonId={activeLessonId} 
+              onSelectLesson={(u, l) => { setActiveUnitId(u); setActiveLessonId(l); }} 
+              completedLessons={completedLessons} 
+              language={language}
+              onDownloadPDF={handleDownloadPDF}
+            />
             <main className="flex-1 overflow-y-auto p-6 md:p-16 bg-white dark:bg-slate-950">
               <div className="max-w-4xl mx-auto">
                 {activeUnitId === 'final' ? (
-                  <Assessment type={activeLessonId as any} questions={course.finalAssessment} projects={course.finalProjects} sources={course.sources} language={language} onExit={handleExitCourse} />
+                  <Assessment 
+                    type={activeLessonId as any} 
+                    questions={course.finalAssessment} 
+                    projects={course.finalProjects} 
+                    sources={course.sources} 
+                    language={language} 
+                    onExit={handleExitCourse} 
+                    onDownloadPDF={handleDownloadPDF}
+                  />
                 ) : currentLesson ? (
                   <div className="space-y-12">
                     <div className="space-y-4">
@@ -268,6 +290,15 @@ const App: React.FC = () => {
           </main>
         )}
       </div>
+
+      {/* Chatbot Sami - Ahora visible siempre que el usuario esté logueado */}
+      <Chatbot 
+        courseTitle={course?.title || "Assistant ProfessorIA"} 
+        lessonTitle={currentLesson?.title || "Global Support"} 
+        userName={user.name} 
+        language={language} 
+      />
+
       <footer className="py-6 px-10 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
         <span>© 2024 ProfesseurIA Sami — Éducation de Précision</span>
         <div className="flex gap-6">

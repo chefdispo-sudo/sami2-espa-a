@@ -10,9 +10,10 @@ interface SidebarProps {
   onSelectLesson: (unitId: string, lessonId: string) => void;
   completedLessons: string[];
   language: Language;
+  onDownloadPDF: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ course, activeLessonId, onSelectLesson, completedLessons, language }) => {
+const Sidebar: React.FC<SidebarProps> = ({ course, activeLessonId, onSelectLesson, completedLessons, language, onDownloadPDF }) => {
   const t = TRANSLATIONS[language].classroom;
   const commonT = TRANSLATIONS[language];
 
@@ -72,6 +73,13 @@ const Sidebar: React.FC<SidebarProps> = ({ course, activeLessonId, onSelectLesso
              <button className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center gap-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 border border-rose-100 dark:border-rose-900/40 hover:scale-105">
                 <span className="text-base">🔴</span>
                 {commonT.nav.live}
+             </button>
+             <button 
+               onClick={onDownloadPDF}
+               className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 border border-indigo-100 dark:border-indigo-900/40 hover:scale-105 mb-4"
+             >
+                <span className="text-base">📄</span>
+                {t.downloadPDF}
              </button>
              {[
                { id: 'assessment', label: t.final.evaluation, icon: '🎯' },
